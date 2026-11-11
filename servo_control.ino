@@ -5,8 +5,11 @@
 Servo yaw_servo;
 Servo pitch_servo;
 
-int yaw_pin = 0; // TODO: get actual
-int pitch_pin = 0; // TODO: get actual
+int yaw_pin = 3; // TODO: get actual
+int pitch_pin = 5; // TODO: get actual
+
+float p_rad = 0;
+float y_rad = 0;
 
 void setup() {
   // Setting up servos
@@ -16,15 +19,29 @@ void setup() {
   // This code is for manually entering p and y until we have a way to receive them from the camera
   // TODO: figure out how to receive p from the camera
   Serial.begin(9600);
-  Serial.println("Enter p (degrees): ");
+
 }
 
 void loop() {
   // This code is for manually entering p and y until we have a way to receive them from the camera
-  float p_rad = Serial.parseFloat() * (M_PI / 180);
+  Serial.println("Enter p (degrees): ");
+  while (Serial.available() == 0) {
+    delay(100);
+  }
+  p_rad = Serial.parseFloat() * (M_PI / 180);
+  while (Serial.available() > 0) {
+    Serial.read();
+  }
   Serial.println("Enter y (degrees): ");
-  float y_rad = Serial.parseFloat() * (M_PI / 180);
-  Serial.println(p_rad, y_rad);
+  while (Serial.available() == 0) {
+    delay(100);
+  }
+  y_rad = Serial.parseFloat() * (M_PI / 180);
+  while (Serial.available() > 0) {
+    Serial.read();
+  }
+  Serial.println(p_rad);
+  Serial.println(y_rad);
 
   // Constants: v = base velocity of pumped water, h = height above ground of camera (same as nozzle)
   float v = 20.3;
