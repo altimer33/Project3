@@ -1,5 +1,5 @@
 CXX       := gcc
-CXXFLAGS  := -Wall -g
+CXXFLAGS  := -Wall -g -DRASPBERRY_PI_CAMERA_PIPELINE
 BUILD_DIR := build
 SRC_DIR   := src
 
