@@ -40,9 +40,9 @@ namespace processing {
 	template<typename T, uint8_t O>
 	BgrValue<T, O> BgrValue<T, O>::operator/(BgrValue other) const {
 		return BgrValue(
-			static_cast<T>((blue << O) / other.blue),
-			static_cast<T>((green << O) / other.green),
-			static_cast<T>((red << O) / other.red)
+			static_cast<T>(other.blue == 0 ? 0 : (blue << O) / other.blue),
+			static_cast<T>(other.green == 0 ? 0 : (green << O) / other.green),
+			static_cast<T>(other.red == 0 ? 0 : (red << O) / other.red)
 		);
 	}
 
@@ -175,17 +175,17 @@ namespace processing {
 			);
 			iterationVariation += pixVariation * pixVariation;
 		}
-		BgrValueI diff1 = variation - iterationVariation;
+		BgrValueI diff1 = iterationVariation - variation;
 		variation += diff1 / decayParameter;
-		BgrValueI diff2 = variation - iterationVariation;
+		BgrValueI diff2 = iterationVariation - variation;
 		return std::abs((diff1 * diff2 / variation).sum());
 	}
 
 	BgrValueI PixelData::update(BgrValueB pixel) {
 		BgrValueF currentPixel = BgrValueF::from(pixel);
-		BgrValueF diff1 = mean - currentPixel;
+		BgrValueF diff1 = currentPixel - mean;
 		mean += diff1 / decayParameter;
-		BgrValueF diff2 = mean - currentPixel;
+		BgrValueF diff2 = currentPixel - mean;
 		return BgrValueI::from(diff1) * BgrValueI::from(diff2);
 	}
 }
