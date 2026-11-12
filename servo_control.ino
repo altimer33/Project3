@@ -8,13 +8,28 @@ Servo pitch_servo;
 int yaw_pin = 3; // TODO: get actual
 int pitch_pin = 5; // TODO: get actual
 
+// Initializing pump through L298N
+int pump_enA = 7;
+int pump_in1 = 8;
+int pump_in2 = 9;
+
 float p_rad = 0;
 float y_rad = 0;
+
+bool should_pump_run = false;
 
 void setup() {
   // Setting up servos
   yaw_servo.attach(yaw_pin);
   pitch_servo.attach(pitch_pin);
+
+  // Setting up pump through L298N
+  pinMode(pump_enA,OUTPUT);
+  pinMode(pump_in1,OUTPUT);
+  pinMode(pump_in2,OUTPUT);
+
+  digitalWrite(pump_in1,LOW);
+  digitalWrite(pump_in2,LOW);
   
   // This code is for manually entering p and y until we have a way to receive them from the camera
   // TODO: figure out how to receive p from the camera
@@ -61,7 +76,20 @@ void loop() {
   float theta_deg = theta_rad * (180 / M_PI);
   float y_deg = y_rad * (180 / M_PI);
 
-  // Pass angles to servos
+  // Pass angles to servos and alert pump to trigger
   pitch_servo.write(roundf(theta_deg));
   yaw_servo.write(roundf(y_deg));
+  should_pump_run = true;
+
+  // Throughout program: if pump should run, run it for 2 seconds then set the boolean to false
+  if (should_pump_run == true) {
+    digitalWrite(pump_enA,HIGH);
+    digitalWrite(pump_in1,HIGH);
+    digitalWrite(pump_in2,HIGH);
+    delay(2000);
+    digitalWrite(pump_enA,LOW);
+    digitalWrite(pump_in1,LOW);
+    digitalWrite(pump_in2,LOW);
+    should_pump_run = false;
+  }
 }
