@@ -2,8 +2,8 @@
 #include <opencv2/opencv.hpp>
 
 namespace processing {
-	constexpr uint16_t decayParameter = 8;
-	constexpr uint32_t motionCutoff = 30000;
+	constexpr int16_t decayParameter = 8;
+	constexpr int32_t motionCutoff = 30000;
 
 	MotionLocation::MotionLocation(uint32_t x, uint32_t y, bool fire) :
 		x{x},
@@ -121,8 +121,23 @@ namespace processing {
 		uint32_t maxY = 0;
 		for (auto &row : datas) {
 			for (auto &chunk : row) {
-				uint32_t val = chunk.update(image);
+				int32_t val = chunk.update(image);
+				cv::rectangle(image,
+					cv::Point(chunk.xMin + 2, chunk.yMin + 2),
+					cv::Point(chunk.xMin + 14, chunk.yMin + 14),
+					cv::Scalar(0,
+						static_cast<uint8_t>(std::clamp(
+							255 * (val - motionCutoff) / motionCutoff,
+							0, 255
+						)),
+						static_cast<uint8_t>(std::min(
+							255 * val / motionCutoff,
+							255
+						))
+					)
+				);
 				if (val > motionCutoff && val > maxMotion) {
+					std::cout << val << std::endl;
 					maxMotion = val;
 					maxX = chunk.xMin | 8;
 					maxY = chunk.yMin | 8;
