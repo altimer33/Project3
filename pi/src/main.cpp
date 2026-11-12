@@ -9,16 +9,16 @@ int main() {
 		return -1;
 	}
 
+#ifdef WINDOWS_CAMERA_PIPELINE
+	processing::initSettingsWindow();
+#endif
+
 	processing::ImageProcessor processor = processing::ImageProcessor();
 	
 	while (true) {
 		if (!camera::loadFrame()) break;
 
 		auto [x, y, fire] = processor.process(camera::frame);
-
-		if (fire) {
-			std::cout << "Fire at " << (int) x << ", " << (int) y << std::endl;
-		}
 		
 		cv::imshow("Camera Buffer Preview", camera::frame);
 		if (cv::waitKey(10) == 27) break;

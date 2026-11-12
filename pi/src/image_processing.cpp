@@ -1,9 +1,51 @@
 #include "image_processing.hpp"
 #include <opencv2/opencv.hpp>
 
+#ifdef WINDOWS_CAMERA_PIPELINE
+#define CONDITIONAL_CONSTEXPR
+#endif
+
+#ifdef RASPBERRY_PI_CAMERA_PIPELINE
+#define CONDITIONAL_CONSTEXPR constexpr
+#endif
+
 namespace processing {
-	constexpr int16_t decayParameter = 8;
-	constexpr int32_t motionCutoff = 30000;
+#ifdef RASPBERRY_PI_CAMERA_PIPELINE
+	constexpr int16_t decayParameter = 20;
+	constexpr int32_t motionCutoff = 2000;
+	constexpr int32_t varianceFloor = 16;
+#endif
+
+#ifdef WINDOWS_CAMERA_PIPELINE
+	int16_t colorDecay = 20;
+	int16_t changeDecay = 5;
+	int32_t motionCutoff = 100;
+	int32_t varianceFloor = 16;
+
+	void setColorDecay(int pos, void*) {
+		if (pos > 0) colorDecay = static_cast<int16_t>(pos);
+	}
+
+	void setMotionCutoff(int pos, void*) {
+		if (pos > 0) motionCutoff = static_cast<int16_t>(pos);
+	}
+
+	void setChangeDecay(int pos, void*) {
+		if (pos > 0) changeDecay = static_cast<int16_t>(pos);
+	}
+
+	void initSettingsWindow() {
+		cv::createTrackbar("color decay", "Camera Buffer Preview", nullptr, 200, setColorDecay);
+		cv::createTrackbar("change decay", "Camera Buffer Preview", nullptr, 20, setChangeDecay);
+		cv::createTrackbar("cutoff", "Camera Buffer Preview", nullptr, 200, setMotionCutoff);
+
+		setColorDecay(20, nullptr);
+		setChangeDecay(5, nullptr);
+		setMotionCutoff(100, nullptr);
+	}
+
+
+#endif
 
 	MotionLocation::MotionLocation(uint32_t x, uint32_t y, bool fire) :
 		x{x},
@@ -98,8 +140,8 @@ namespace processing {
 	}
 
 	template<typename T, uint8_t O>
-	T BgrValue<T, O>::sum() const {
-		return static_cast<T>(blue + green + red);
+	T BgrValue<T, O>::absSum() const {
+		return static_cast<T>(std::abs(blue) + std::abs(green) + std::abs(red));
 	}
 
 	template<typename T>
@@ -137,7 +179,6 @@ namespace processing {
 					)
 				);
 				if (val > motionCutoff && val > maxMotion) {
-					std::cout << val << std::endl;
 					maxMotion = val;
 					maxX = chunk.xMin | 8;
 					maxY = chunk.yMin | 8;
@@ -159,7 +200,7 @@ namespace processing {
 	ChunkData::ChunkData() {}
 
 	uint32_t ChunkData::update(cv::Mat &image) {
-		BgrValueI iterationVariation(0, 0, 0);
+		BgrValueI iterationVariation = BgrValueI(0, 0, 0);
 		for (uint16_t i = 0; i < 0x100; i++) {
 			const uint8_t x = i & 0xF;
 			const uint8_t y = i >> 4;
@@ -173,18 +214,16 @@ namespace processing {
 					)
 				)
 			);
-			iterationVariation += pixVariation * pixVariation;
+			iterationVariation += pixVariation;
 		}
-		BgrValueI diff1 = iterationVariation - variation;
-		variation += diff1 / decayParameter;
-		BgrValueI diff2 = iterationVariation - variation;
-		return std::abs((diff1 * diff2 / variation).sum());
+		variation += (iterationVariation - variation) / changeDecay;
+		return (iterationVariation / variation).absSum();
 	}
 
 	BgrValueI PixelData::update(BgrValueB pixel) {
 		BgrValueF currentPixel = BgrValueF::from(pixel);
 		BgrValueF diff1 = currentPixel - mean;
-		mean += diff1 / decayParameter;
+		mean += diff1 / colorDecay;
 		BgrValueF diff2 = currentPixel - mean;
 		return BgrValueI::from(diff1) * BgrValueI::from(diff2);
 	}

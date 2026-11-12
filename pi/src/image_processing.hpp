@@ -5,6 +5,8 @@
 #include <opencv2/opencv.hpp>
 
 namespace processing {
+	void initSettingsWindow();
+
 	template<typename T, uint8_t O>
 	struct BgrValue {
 		T blue;
@@ -33,7 +35,7 @@ namespace processing {
 
 		BgrValue operator-=(const BgrValue& other);
 
-		T sum() const;
+		T absSum() const;
 
 		template<typename U, uint8_t V>
 		static BgrValue<T, O> from(BgrValue<U, V> other) {
