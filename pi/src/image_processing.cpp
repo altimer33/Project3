@@ -1,14 +1,6 @@
 #include "image_processing.hpp"
 #include <opencv2/opencv.hpp>
 
-#ifdef WINDOWS_CAMERA_PIPELINE
-#define CONDITIONAL_CONSTEXPR
-#endif
-
-#ifdef RASPBERRY_PI_CAMERA_PIPELINE
-#define CONDITIONAL_CONSTEXPR constexpr
-#endif
-
 namespace processing {
 #ifdef RASPBERRY_PI_CAMERA_PIPELINE
 	constexpr int16_t decayParameter = 20;
@@ -20,7 +12,6 @@ namespace processing {
 	int16_t colorDecay = 20;
 	int16_t changeDecay = 5;
 	int32_t motionCutoff = 100;
-	int32_t varianceFloor = 16;
 
 	void setColorDecay(int pos, void*) {
 		if (pos > 0) colorDecay = static_cast<int16_t>(pos);
