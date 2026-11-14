@@ -21,6 +21,8 @@ target_sources(SquirrelShooter
         src/image_processing.cpp
         src/image_processing.hpp
         src/main.cpp
+        src/crickit_i2c.cpp
+        src/crickit_i2c.hpp
 )
 
 target_link_libraries(SquirrelShooter ${OpenCV_LIBS})
